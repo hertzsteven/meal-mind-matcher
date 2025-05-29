@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Utensils, Heart, Target, Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserData {
   name: string;
@@ -79,93 +79,27 @@ const Index = () => {
   const generateRecommendation = async () => {
     setIsLoading(true);
     try {
-      const prompt = `Based on the following user information, create a comprehensive, personalized dietary recommendation:
-
-      Personal Details:
-      - Name: ${userData.name}
-      - Age: ${userData.age}
-      - Gender: ${userData.gender}
-      - Weight: ${userData.weight}
-      - Height: ${userData.height}
-      - Activity Level: ${userData.activityLevel}
-
-      Dietary Information:
-      - Current Diet: ${userData.currentDiet}
-      - Dietary Restrictions: ${userData.dietaryRestrictions.join(', ') || 'None'}
-      - Meals per Day: ${userData.mealsPerDay}
-      - Cooking Time Available: ${userData.cookingTime}
-      - Budget: ${userData.budget}
-
-      Health & Goals:
-      - Health Goals: ${userData.healthGoals}
-      - Medical Conditions: ${userData.medicalConditions || 'None mentioned'}
-      - Food Preferences: ${userData.foodPreferences}
-      - Additional Information: ${userData.additionalInfo || 'None'}
-
-      Please provide a detailed dietary recommendation that includes:
-      1. A summary of their current situation
-      2. Specific dietary recommendations tailored to their goals
-      3. Sample meal ideas for different times of day
-      4. Nutritional guidelines and portion suggestions
-      5. Tips for implementation and sustainability
-      6. Any important considerations based on their restrictions or conditions
-
-      Format the response in a clear, encouraging, and actionable way.`;
-
-      // Note: In a real implementation, you would make an API call to OpenAI here
-      // For this demo, we'll simulate the API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Calling OpenAI API with user data:', userData);
       
-      const mockRecommendation = `Hello ${userData.name}! Based on your information, here's your personalized dietary recommendation:
+      const { data, error } = await supabase.functions.invoke('generate-diet-recommendation', {
+        body: { userData }
+      });
 
-**Your Profile Summary:**
-You're a ${userData.age}-year-old ${userData.gender} with ${userData.activityLevel} activity level, aiming for ${userData.healthGoals}. Your current approach of ${userData.currentDiet} provides a good foundation to build upon.
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to generate recommendation');
+      }
 
-**Recommended Dietary Plan:**
+      if (!data?.recommendation) {
+        throw new Error('No recommendation received from AI');
+      }
 
-*Daily Structure:*
-- ${userData.mealsPerDay} balanced meals
-- Focus on whole foods and nutrient density
-- Portion control aligned with your ${userData.activityLevel} lifestyle
-
-*Key Recommendations:*
-1. **Protein:** Include lean sources at each meal (aim for 0.8-1g per kg body weight)
-2. **Carbohydrates:** Choose complex carbs like quinoa, sweet potatoes, and whole grains
-3. **Healthy Fats:** Incorporate avocados, nuts, seeds, and olive oil
-4. **Hydration:** Aim for 8-10 glasses of water daily
-
-*Sample Meal Ideas:*
-
-**Breakfast:**
-- Greek yogurt with berries and nuts
-- Oatmeal with banana and almond butter
-- Vegetable omelet with whole grain toast
-
-**Lunch:**
-- Quinoa bowl with roasted vegetables and protein
-- Large salad with mixed greens, protein, and healthy fats
-- Soup with whole grain bread
-
-**Dinner:**
-- Grilled protein with steamed vegetables and sweet potato
-- Stir-fry with brown rice
-- Baked fish with roasted Brussels sprouts
-
-*Implementation Tips:*
-- Start with small changes and gradually build habits
-- Meal prep on weekends to save time during busy weekdays
-- Keep healthy snacks readily available
-- Listen to your body's hunger and fullness cues
-
-*Special Considerations:*
-${userData.dietaryRestrictions.length > 0 ? `Your dietary restrictions (${userData.dietaryRestrictions.join(', ')}) have been considered in these recommendations.` : ''}
-${userData.medicalConditions ? `Given your mentioned health considerations, please consult with a healthcare provider before making significant dietary changes.` : ''}
-
-Remember, sustainable changes happen gradually. Focus on progress, not perfection, and celebrate small wins along the way!`;
-
-      setRecommendation(mockRecommendation);
+      console.log('Received recommendation:', data.recommendation);
+      setRecommendation(data.recommendation);
       setCurrentStep(7);
+      toast.success("Your personalized diet recommendation has been generated!");
     } catch (error) {
+      console.error('Error generating recommendation:', error);
       toast.error("Failed to generate recommendation. Please try again.");
     } finally {
       setIsLoading(false);
@@ -493,11 +427,23 @@ Remember, sustainable changes happen gradually. Focus on progress, not perfectio
               <CardContent className="pt-6">
                 <div className="prose prose-sm max-w-none">
                   {recommendation.split('\n').map((line, index) => {
+                    if (line.startsWith('# ')) {
+                      return <h1 key={index} className="text-2xl font-bold mt-6 mb-3">{line.slice(2)}</h1>;
+                    }
+                    if (line.startsWith('## ')) {
+                      return <h2 key={index} className="text-xl font-semibold mt-5 mb-2">{line.slice(3)}</h2>;
+                    }
+                    if (line.startsWith('### ')) {
+                      return <h3 key={index} className="text-lg font-medium mt-4 mb-2">{line.slice(4)}</h3>;
+                    }
                     if (line.startsWith('**') && line.endsWith('**')) {
-                      return <h3 key={index} className="font-semibold text-lg mt-4 mb-2">{line.slice(2, -2)}</h3>;
+                      return <h4 key={index} className="font-semibold text-base mt-3 mb-1">{line.slice(2, -2)}</h4>;
                     }
                     if (line.startsWith('*') && line.endsWith('*') && !line.includes('**')) {
-                      return <h4 key={index} className="font-medium text-base mt-3 mb-1">{line.slice(1, -1)}</h4>;
+                      return <h5 key={index} className="font-medium text-base mt-3 mb-1">{line.slice(1, -1)}</h5>;
+                    }
+                    if (line.startsWith('- ')) {
+                      return <li key={index} className="ml-4 mb-1">{line.slice(2)}</li>;
                     }
                     if (line.trim() === '') {
                       return <br key={index} />;
