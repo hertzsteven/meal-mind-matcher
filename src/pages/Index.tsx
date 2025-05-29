@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,7 +128,9 @@ const Index = () => {
       case 3:
         return userData.currentDiet && userData.mealsPerDay && userData.cookingTime;
       case 4:
-        return userData.healthGoals;
+        return true; // Step 4 (Dietary Preferences) has no required fields
+      case 5:
+        return userData.healthGoals; // Health goals is required on step 5
       default:
         return true;
     }
