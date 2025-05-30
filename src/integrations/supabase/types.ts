@@ -9,7 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      user_diet_profiles: {
+        Row: {
+          activity_level: string | null
+          additional_info: string | null
+          age: number | null
+          budget: string | null
+          cooking_time: string | null
+          created_at: string
+          current_diet: string | null
+          dietary_restrictions: string[] | null
+          food_preferences: string | null
+          gender: string | null
+          health_goals: string | null
+          height: number | null
+          id: string
+          meals_per_day: string | null
+          medical_conditions: string | null
+          name: string
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          additional_info?: string | null
+          age?: number | null
+          budget?: string | null
+          cooking_time?: string | null
+          created_at?: string
+          current_diet?: string | null
+          dietary_restrictions?: string[] | null
+          food_preferences?: string | null
+          gender?: string | null
+          health_goals?: string | null
+          height?: number | null
+          id?: string
+          meals_per_day?: string | null
+          medical_conditions?: string | null
+          name: string
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          additional_info?: string | null
+          age?: number | null
+          budget?: string | null
+          cooking_time?: string | null
+          created_at?: string
+          current_diet?: string | null
+          dietary_restrictions?: string[] | null
+          food_preferences?: string | null
+          gender?: string | null
+          health_goals?: string | null
+          height?: number | null
+          id?: string
+          meals_per_day?: string | null
+          medical_conditions?: string | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

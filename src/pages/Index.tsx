@@ -26,6 +26,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<string>('');
   const [userData, setUserData] = useState<UserData>(getEmptyUserData());
+  const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
   
   const steps = [
     'Welcome',
@@ -43,6 +44,110 @@ const Index = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Load existing user profile data when component mounts
+  useEffect(() => {
+    if (user) {
+      loadExistingProfile();
+    }
+  }, [user]);
+
+  const loadExistingProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_diet_profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Loaded existing profile:', data);
+        setExistingProfileId(data.id);
+        setUserData({
+          name: data.name || '',
+          age: data.age?.toString() || '',
+          gender: data.gender || '',
+          weight: data.weight?.toString() || '',
+          height: data.height?.toString() || '',
+          activityLevel: data.activity_level || '',
+          dietaryRestrictions: data.dietary_restrictions || [],
+          healthGoals: data.health_goals || '',
+          currentDiet: data.current_diet || '',
+          mealsPerDay: data.meals_per_day || '',
+          cookingTime: data.cooking_time || '',
+          budget: data.budget || '',
+          medicalConditions: data.medical_conditions || '',
+          foodPreferences: data.food_preferences || '',
+          additionalInfo: data.additional_info || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading existing profile:', error);
+    }
+  };
+
+  const saveUserProfile = async () => {
+    if (!user) return null;
+
+    try {
+      const profileData = {
+        user_id: user.id,
+        name: userData.name,
+        age: userData.age ? parseInt(userData.age) : null,
+        gender: userData.gender,
+        weight: userData.weight ? parseFloat(userData.weight) : null,
+        height: userData.height ? parseFloat(userData.height) : null,
+        activity_level: userData.activityLevel,
+        dietary_restrictions: userData.dietaryRestrictions,
+        health_goals: userData.healthGoals,
+        current_diet: userData.currentDiet,
+        meals_per_day: userData.mealsPerDay,
+        cooking_time: userData.cookingTime,
+        budget: userData.budget,
+        medical_conditions: userData.medicalConditions,
+        food_preferences: userData.foodPreferences,
+        additional_info: userData.additionalInfo,
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+      if (existingProfileId) {
+        // Update existing profile
+        result = await supabase
+          .from('user_diet_profiles')
+          .update(profileData)
+          .eq('id', existingProfileId)
+          .select()
+          .single();
+      } else {
+        // Create new profile
+        result = await supabase
+          .from('user_diet_profiles')
+          .insert(profileData)
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      console.log('Profile saved successfully:', result.data);
+      setExistingProfileId(result.data.id);
+      return result.data;
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error("Failed to save profile data");
+      throw error;
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -70,6 +175,9 @@ const Index = () => {
   const generateRecommendation = async () => {
     setIsLoading(true);
     try {
+      // First save the user profile
+      await saveUserProfile();
+      
       console.log('Calling OpenAI API with user data:', userData);
       
       const { data, error } = await supabase.functions.invoke('generate-diet-recommendation', {
@@ -88,7 +196,7 @@ const Index = () => {
       console.log('Received recommendation:', data.recommendation);
       setRecommendation(data.recommendation);
       setCurrentStep(7);
-      toast.success("Your personalized diet recommendation has been generated!");
+      toast.success("Your personalized diet recommendation has been generated and profile saved!");
     } catch (error) {
       console.error('Error generating recommendation:', error);
       toast.error("Failed to generate recommendation. Please try again.");
@@ -113,6 +221,7 @@ const Index = () => {
     setCurrentStep(0);
     setUserData(getEmptyUserData());
     setRecommendation('');
+    setExistingProfileId(null);
   };
 
   if (loading) {
