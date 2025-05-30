@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      diet_recommendations: {
+        Row: {
+          created_at: string
+          generated_at: string
+          id: string
+          profile_id: string | null
+          recommendation_text: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          profile_id?: string | null
+          recommendation_text: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          profile_id?: string | null
+          recommendation_text?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diet_recommendations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_diet_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_diet_profiles: {
         Row: {
           activity_level: string | null
@@ -18,6 +59,7 @@ export type Database = {
           cooking_time: string | null
           created_at: string
           current_diet: string | null
+          current_recommendation_id: string | null
           dietary_restrictions: string[] | null
           food_preferences: string | null
           gender: string | null
@@ -29,6 +71,7 @@ export type Database = {
           name: string
           updated_at: string
           user_id: string
+          version: number
           weight: number | null
         }
         Insert: {
@@ -39,6 +82,7 @@ export type Database = {
           cooking_time?: string | null
           created_at?: string
           current_diet?: string | null
+          current_recommendation_id?: string | null
           dietary_restrictions?: string[] | null
           food_preferences?: string | null
           gender?: string | null
@@ -50,6 +94,7 @@ export type Database = {
           name: string
           updated_at?: string
           user_id: string
+          version?: number
           weight?: number | null
         }
         Update: {
@@ -60,6 +105,7 @@ export type Database = {
           cooking_time?: string | null
           created_at?: string
           current_diet?: string | null
+          current_recommendation_id?: string | null
           dietary_restrictions?: string[] | null
           food_preferences?: string | null
           gender?: string | null
@@ -71,9 +117,18 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+          version?: number
           weight?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_diet_profiles_current_recommendation_id_fkey"
+            columns: ["current_recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "diet_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

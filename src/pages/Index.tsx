@@ -25,6 +25,7 @@ const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<string>('');
+  const [currentRecommendationId, setCurrentRecommendationId] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData>(getEmptyUserData());
   const [existingProfileId, setExistingProfileId] = useState<string | null>(null);
   
@@ -56,7 +57,15 @@ const Index = () => {
     try {
       const { data, error } = await supabase
         .from('user_diet_profiles')
-        .select('*')
+        .select(`
+          *,
+          current_recommendation_id,
+          diet_recommendations!current_recommendation_id (
+            id,
+            recommendation_text,
+            generated_at
+          )
+        `)
         .eq('user_id', user?.id)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -87,6 +96,12 @@ const Index = () => {
           foodPreferences: data.food_preferences || '',
           additionalInfo: data.additional_info || ''
         });
+
+        // Load current recommendation if exists
+        if (data.diet_recommendations) {
+          setRecommendation(data.diet_recommendations.recommendation_text);
+          setCurrentRecommendationId(data.diet_recommendations.id);
+        }
       }
     } catch (error) {
       console.error('Error loading existing profile:', error);
@@ -119,10 +134,13 @@ const Index = () => {
 
       let result;
       if (existingProfileId) {
-        // Update existing profile
+        // Update existing profile with incremented version
         result = await supabase
           .from('user_diet_profiles')
-          .update(profileData)
+          .update({
+            ...profileData,
+            version: await getNextVersion()
+          })
           .eq('id', existingProfileId)
           .select()
           .single();
@@ -145,6 +163,58 @@ const Index = () => {
     } catch (error) {
       console.error('Error saving profile:', error);
       toast.error("Failed to save profile data");
+      throw error;
+    }
+  };
+
+  const getNextVersion = async () => {
+    if (!existingProfileId) return 1;
+    
+    const { data } = await supabase
+      .from('user_diet_profiles')
+      .select('version')
+      .eq('id', existingProfileId)
+      .single();
+    
+    return (data?.version || 0) + 1;
+  };
+
+  const saveRecommendation = async (recommendationText: string, profileId: string) => {
+    if (!user) return null;
+
+    try {
+      // Archive any existing active recommendations for this user
+      await supabase
+        .from('diet_recommendations')
+        .update({ status: 'archived' })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      // Create new recommendation
+      const { data, error } = await supabase
+        .from('diet_recommendations')
+        .insert({
+          user_id: user.id,
+          profile_id: profileId,
+          recommendation_text: recommendationText,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update profile to reference the new recommendation
+      await supabase
+        .from('user_diet_profiles')
+        .update({ current_recommendation_id: data.id })
+        .eq('id', profileId);
+
+      setCurrentRecommendationId(data.id);
+      console.log('Recommendation saved successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('Error saving recommendation:', error);
       throw error;
     }
   };
@@ -176,7 +246,8 @@ const Index = () => {
     setIsLoading(true);
     try {
       // First save the user profile
-      await saveUserProfile();
+      const savedProfile = await saveUserProfile();
+      if (!savedProfile) throw new Error('Failed to save profile');
       
       console.log('Calling OpenAI API with user data:', userData);
       
@@ -194,9 +265,13 @@ const Index = () => {
       }
 
       console.log('Received recommendation:', data.recommendation);
+      
+      // Save the recommendation to database
+      await saveRecommendation(data.recommendation, savedProfile.id);
+      
       setRecommendation(data.recommendation);
       setCurrentStep(7);
-      toast.success("Your personalized diet recommendation has been generated and profile saved!");
+      toast.success("Your personalized diet recommendation has been generated and saved!");
     } catch (error) {
       console.error('Error generating recommendation:', error);
       toast.error("Failed to generate recommendation. Please try again.");
@@ -221,6 +296,7 @@ const Index = () => {
     setCurrentStep(0);
     setUserData(getEmptyUserData());
     setRecommendation('');
+    setCurrentRecommendationId(null);
     setExistingProfileId(null);
   };
 
@@ -258,7 +334,14 @@ const Index = () => {
       case 6:
         return <AdditionalInfoStep userData={userData} onInputChange={handleInputChange} />;
       case 7:
-        return <ResultsStep recommendation={recommendation} onStartNew={resetForm} />;
+        return (
+          <ResultsStep 
+            recommendation={recommendation} 
+            onStartNew={resetForm}
+            currentRecommendationId={currentRecommendationId}
+            existingProfileId={existingProfileId}
+          />
+        );
       default:
         return null;
     }
