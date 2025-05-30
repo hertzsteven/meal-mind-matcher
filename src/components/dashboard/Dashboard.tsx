@@ -20,7 +20,23 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const formatRecommendationPreview = (text: string) => {
     if (!text) return "No recommendation available";
-    return text.length > 200 ? `${text.substring(0, 200)}...` : text;
+    
+    // Remove markdown formatting for preview
+    const cleanText = text
+      .replace(/^#+\s+/gm, '') // Remove headers
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/\*(.*?)\*/g, '$1') // Remove italic
+      .replace(/^[-*]\s+/gm, '• ') // Convert lists to bullets
+      .replace(/^\d+\.\s+/gm, '• '); // Convert numbered lists to bullets
+    
+    return cleanText.length > 200 ? `${cleanText.substring(0, 200)}...` : cleanText;
+  };
+
+  const renderMarkdownPreview = (text: string) => {
+    if (!text) return <p className="text-gray-500">No recommendation available</p>;
+    
+    const preview = formatRecommendationPreview(text);
+    return <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{preview}</p>;
   };
 
   return (
@@ -96,13 +112,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           {recommendation ? (
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-gray-700 whitespace-pre-wrap">
-                  {formatRecommendationPreview(recommendation)}
-                </p>
+                {renderMarkdownPreview(recommendation)}
                 {recommendation.length > 200 && (
                   <Button 
                     variant="link" 
-                    className="p-0 h-auto text-blue-600"
+                    className="p-0 h-auto text-blue-600 mt-2"
                     onClick={onTakeQuestionnaire}
                   >
                     View full recommendation
