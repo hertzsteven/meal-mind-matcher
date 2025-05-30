@@ -2,11 +2,23 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Utensils, LogOut, User } from "lucide-react";
+import { Utensils, LogOut, User, FileText, Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const AppHeader: React.FC = () => {
+interface AppHeaderProps {
+  onTakeQuestionnaire?: () => void;
+  onBackToDashboard?: () => void;
+  showQuestionnaire?: boolean;
+  hasProfile?: boolean;
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({ 
+  onTakeQuestionnaire, 
+  onBackToDashboard,
+  showQuestionnaire,
+  hasProfile 
+}) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -27,11 +39,39 @@ const AppHeader: React.FC = () => {
           <Utensils className="w-6 h-6 text-green-600" />
           <span className="font-semibold text-gray-900">NutriAI</span>
         </div>
+        
         <div className="flex items-center gap-4">
+          {hasProfile && (
+            <div className="flex items-center gap-2">
+              {showQuestionnaire ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onBackToDashboard}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  Dashboard
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onTakeQuestionnaire}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Take Questionnaire
+                </Button>
+              )}
+            </div>
+          )}
+          
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <User className="w-4 h-4" />
             <span>{user?.email}</span>
           </div>
+          
           <Button
             variant="outline"
             size="sm"
