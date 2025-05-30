@@ -104,6 +104,8 @@ export const useRecommendation = () => {
     currentRecommendationId,
     isLoading,
     generateRecommendation,
-    resetRecommendation
+    resetRecommendation,
+    setRecommendation,
+    setCurrentRecommendationId
   };
 };

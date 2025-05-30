@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +9,7 @@ import StepProgress from "@/components/progress/StepProgress";
 import StepNavigation from "@/components/navigation/StepNavigation";
 import Dashboard from "@/components/dashboard/Dashboard";
 import { renderStep } from "@/utils/stepRenderer";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -31,7 +31,9 @@ const Index = () => {
     currentRecommendationId,
     isLoading,
     generateRecommendation,
-    resetRecommendation
+    resetRecommendation,
+    setRecommendation,
+    setCurrentRecommendationId
   } = useRecommendation();
   
   const steps = [
@@ -50,6 +52,41 @@ const Index = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Load existing recommendation when user has a profile and not showing questionnaire
+  useEffect(() => {
+    const loadExistingRecommendation = async () => {
+      if (user && existingProfileId && !showQuestionnaire && !recommendation) {
+        try {
+          console.log('Loading existing recommendation for profile:', existingProfileId);
+          
+          const { data, error } = await supabase
+            .from('diet_recommendations')
+            .select('*')
+            .eq('profile_id', existingProfileId)
+            .eq('status', 'active')
+            .order('generated_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (error) {
+            console.error('Error loading recommendation:', error);
+            return;
+          }
+
+          if (data) {
+            console.log('Loaded existing recommendation:', data);
+            setRecommendation(data.recommendation_text);
+            setCurrentRecommendationId(data.id);
+          }
+        } catch (error) {
+          console.error('Error loading existing recommendation:', error);
+        }
+      }
+    };
+
+    loadExistingRecommendation();
+  }, [user, existingProfileId, showQuestionnaire, recommendation, setRecommendation, setCurrentRecommendationId]);
 
   // Check if user should see dashboard or questionnaire
   const shouldShowDashboard = existingProfileId && !showQuestionnaire;
