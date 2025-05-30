@@ -1,36 +1,23 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Utensils, Heart, Target, Sparkles, ArrowRight, ArrowLeft, LogOut, User } from "lucide-react";
+import { Utensils, ArrowRight, ArrowLeft, LogOut, User, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-
-interface UserData {
-  name: string;
-  age: string;
-  gender: string;
-  weight: string;
-  height: string;
-  activityLevel: string;
-  dietaryRestrictions: string[];
-  healthGoals: string;
-  currentDiet: string;
-  mealsPerDay: string;
-  cookingTime: string;
-  budget: string;
-  medicalConditions: string;
-  foodPreferences: string;
-  additionalInfo: string;
-}
+import { UserData } from "@/types/userData";
+import { validateStep, getEmptyUserData } from "@/utils/formValidation";
+import WelcomeStep from "@/components/steps/WelcomeStep";
+import BasicInfoStep from "@/components/steps/BasicInfoStep";
+import PhysicalDetailsStep from "@/components/steps/PhysicalDetailsStep";
+import LifestyleStep from "@/components/steps/LifestyleStep";
+import DietaryPreferencesStep from "@/components/steps/DietaryPreferencesStep";
+import HealthGoalsStep from "@/components/steps/HealthGoalsStep";
+import AdditionalInfoStep from "@/components/steps/AdditionalInfoStep";
+import ResultsStep from "@/components/steps/ResultsStep";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -38,23 +25,7 @@ const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<string>('');
-  const [userData, setUserData] = useState<UserData>({
-    name: '',
-    age: '',
-    gender: '',
-    weight: '',
-    height: '',
-    activityLevel: '',
-    dietaryRestrictions: [],
-    healthGoals: '',
-    currentDiet: '',
-    mealsPerDay: '',
-    cookingTime: '',
-    budget: '',
-    medicalConditions: '',
-    foodPreferences: '',
-    additionalInfo: ''
-  });
+  const [userData, setUserData] = useState<UserData>(getEmptyUserData());
   
   const steps = [
     'Welcome',
@@ -138,21 +109,10 @@ const Index = () => {
     }
   };
 
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return userData.name && userData.age && userData.gender;
-      case 2:
-        return userData.weight && userData.height && userData.activityLevel;
-      case 3:
-        return userData.currentDiet && userData.mealsPerDay && userData.cookingTime;
-      case 4:
-        return true; // Step 4 (Dietary Preferences) has no required fields
-      case 5:
-        return userData.healthGoals; // Health goals is required on step 5
-      default:
-        return true;
-    }
+  const resetForm = () => {
+    setCurrentStep(0);
+    setUserData(getEmptyUserData());
+    setRecommendation('');
   };
 
   if (loading) {
@@ -169,354 +129,27 @@ const Index = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return (
-          <div className="text-center space-y-6">
-            <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-              <Utensils className="w-10 h-10 text-green-600" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Personalized Diet Recommendations</h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Get AI-powered dietary advice tailored specifically to your lifestyle, goals, and preferences. 
-                Let's create a nutrition plan that works for you.
-              </p>
-            </div>
-            <div className="flex justify-center gap-8 py-6">
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="text-gray-700">Health-focused</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-500" />
-                <span className="text-gray-700">Goal-oriented</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-500" />
-                <span className="text-gray-700">AI-powered</span>
-              </div>
-            </div>
-            <Button onClick={nextStep} size="lg" className="bg-green-600 hover:bg-green-700">
-              Get Started <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        );
-
+        return <WelcomeStep onNext={nextStep} />;
       case 1:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  value={userData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter your name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  value={userData.age}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
-                  placeholder="Enter your age"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Gender</Label>
-              <RadioGroup 
-                value={userData.gender} 
-                onValueChange={(value) => handleInputChange('gender', value)}
-                className="flex gap-6 mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">Male</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">Female</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">Other</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          </div>
-        );
-
+        return <BasicInfoStep userData={userData} onInputChange={handleInputChange} />;
       case 2:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Physical Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="weight">Weight (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  value={userData.weight}
-                  onChange={(e) => handleInputChange('weight', e.target.value)}
-                  placeholder="Enter your weight"
-                />
-              </div>
-              <div>
-                <Label htmlFor="height">Height (cm)</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  value={userData.height}
-                  onChange={(e) => handleInputChange('height', e.target.value)}
-                  placeholder="Enter your height"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Activity Level</Label>
-              <Select value={userData.activityLevel} onValueChange={(value) => handleInputChange('activityLevel', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your activity level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sedentary">Sedentary (little to no exercise)</SelectItem>
-                  <SelectItem value="light">Light (1-3 days/week)</SelectItem>
-                  <SelectItem value="moderate">Moderate (3-5 days/week)</SelectItem>
-                  <SelectItem value="active">Active (6-7 days/week)</SelectItem>
-                  <SelectItem value="very-active">Very Active (2x/day, intense workouts)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
+        return <PhysicalDetailsStep userData={userData} onInputChange={handleInputChange} />;
       case 3:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Lifestyle & Habits</h2>
-            <div>
-              <Label htmlFor="currentDiet">Current Diet Description</Label>
-              <Textarea
-                id="currentDiet"
-                value={userData.currentDiet}
-                onChange={(e) => handleInputChange('currentDiet', e.target.value)}
-                placeholder="Describe your current eating habits..."
-                className="h-24"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Meals per Day</Label>
-                <Select value={userData.mealsPerDay} onValueChange={(value) => handleInputChange('mealsPerDay', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select meals per day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 meals</SelectItem>
-                    <SelectItem value="3">3 meals</SelectItem>
-                    <SelectItem value="4">4 meals</SelectItem>
-                    <SelectItem value="5">5+ meals</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Cooking Time Available</Label>
-                <Select value={userData.cookingTime} onValueChange={(value) => handleInputChange('cookingTime', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select cooking time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minimal">Minimal (15 min or less)</SelectItem>
-                    <SelectItem value="moderate">Moderate (15-30 min)</SelectItem>
-                    <SelectItem value="flexible">Flexible (30+ min)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label>Budget for Food</Label>
-              <Select value={userData.budget} onValueChange={(value) => handleInputChange('budget', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your budget range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Budget-friendly</SelectItem>
-                  <SelectItem value="moderate">Moderate</SelectItem>
-                  <SelectItem value="flexible">Flexible</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-
+        return <LifestyleStep userData={userData} onInputChange={handleInputChange} />;
       case 4:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Dietary Preferences</h2>
-            <div>
-              <Label className="text-base font-medium">Dietary Restrictions (select all that apply)</Label>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                {[
-                  'Vegetarian',
-                  'Vegan',
-                  'Gluten-free',
-                  'Dairy-free',
-                  'Nut-free',
-                  'Low-carb',
-                  'Keto',
-                  'Paleo',
-                  'Halal',
-                  'Kosher'
-                ].map((restriction) => (
-                  <div key={restriction} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={restriction}
-                      checked={userData.dietaryRestrictions.includes(restriction)}
-                      onCheckedChange={(checked) => handleRestrictionChange(restriction, checked as boolean)}
-                    />
-                    <Label htmlFor={restriction}>{restriction}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="foodPreferences">Food Preferences & Dislikes</Label>
-              <Textarea
-                id="foodPreferences"
-                value={userData.foodPreferences}
-                onChange={(e) => handleInputChange('foodPreferences', e.target.value)}
-                placeholder="Tell us about foods you love, dislike, or are allergic to..."
-                className="h-24"
-              />
-            </div>
-          </div>
+          <DietaryPreferencesStep 
+            userData={userData} 
+            onInputChange={handleInputChange}
+            onRestrictionChange={handleRestrictionChange}
+          />
         );
-
       case 5:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Health & Goals</h2>
-            <div>
-              <Label htmlFor="healthGoals">Primary Health Goals</Label>
-              <Textarea
-                id="healthGoals"
-                value={userData.healthGoals}
-                onChange={(e) => handleInputChange('healthGoals', e.target.value)}
-                placeholder="What are your main health and nutrition goals? (e.g., weight loss, muscle gain, better energy, etc.)"
-                className="h-24"
-              />
-            </div>
-            <div>
-              <Label htmlFor="medicalConditions">Medical Conditions or Health Concerns</Label>
-              <Textarea
-                id="medicalConditions"
-                value={userData.medicalConditions}
-                onChange={(e) => handleInputChange('medicalConditions', e.target.value)}
-                placeholder="Any medical conditions, medications, or health concerns we should consider? (optional)"
-                className="h-20"
-              />
-            </div>
-          </div>
-        );
-
+        return <HealthGoalsStep userData={userData} onInputChange={handleInputChange} />;
       case 6:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-center">Additional Information</h2>
-            <div>
-              <Label htmlFor="additionalInfo">Anything Else We Should Know?</Label>
-              <Textarea
-                id="additionalInfo"
-                value={userData.additionalInfo}
-                onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-                placeholder="Any additional information about your lifestyle, preferences, or goals that would help us create better recommendations..."
-                className="h-32"
-              />
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">Ready to Generate Your Plan!</h3>
-              <p className="text-blue-700 text-sm">
-                We'll use AI to analyze your information and create a personalized dietary recommendation 
-                tailored specifically to your needs, goals, and preferences.
-              </p>
-            </div>
-          </div>
-        );
-
+        return <AdditionalInfoStep userData={userData} onInputChange={handleInputChange} />;
       case 7:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <Sparkles className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-semibold">Your Personalized Diet Recommendation</h2>
-            </div>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="prose prose-sm max-w-none">
-                  {recommendation.split('\n').map((line, index) => {
-                    if (line.startsWith('# ')) {
-                      return <h1 key={index} className="text-2xl font-bold mt-6 mb-3">{line.slice(2)}</h1>;
-                    }
-                    if (line.startsWith('## ')) {
-                      return <h2 key={index} className="text-xl font-semibold mt-5 mb-2">{line.slice(3)}</h2>;
-                    }
-                    if (line.startsWith('### ')) {
-                      return <h3 key={index} className="text-lg font-medium mt-4 mb-2">{line.slice(4)}</h3>;
-                    }
-                    if (line.startsWith('**') && line.endsWith('**')) {
-                      return <h4 key={index} className="font-semibold text-base mt-3 mb-1">{line.slice(2, -2)}</h4>;
-                    }
-                    if (line.startsWith('*') && line.endsWith('*') && !line.includes('**')) {
-                      return <h5 key={index} className="font-medium text-base mt-3 mb-1">{line.slice(1, -1)}</h5>;
-                    }
-                    if (line.startsWith('- ')) {
-                      return <li key={index} className="ml-4 mb-1">{line.slice(2)}</li>;
-                    }
-                    if (line.trim() === '') {
-                      return <br key={index} />;
-                    }
-                    return <p key={index} className="mb-2">{line}</p>;
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-            <div className="text-center">
-              <Button 
-                onClick={() => {
-                  setCurrentStep(0);
-                  setUserData({
-                    name: '',
-                    age: '',
-                    gender: '',
-                    weight: '',
-                    height: '',
-                    activityLevel: '',
-                    dietaryRestrictions: [],
-                    healthGoals: '',
-                    currentDiet: '',
-                    mealsPerDay: '',
-                    cookingTime: '',
-                    budget: '',
-                    medicalConditions: '',
-                    foodPreferences: '',
-                    additionalInfo: ''
-                  });
-                  setRecommendation('');
-                }}
-                variant="outline"
-              >
-                Start New Assessment
-              </Button>
-            </div>
-          </div>
-        );
-
+        return <ResultsStep recommendation={recommendation} onStartNew={resetForm} />;
       default:
         return null;
     }
@@ -592,7 +225,7 @@ const Index = () => {
                   ) : (
                     <Button
                       onClick={nextStep}
-                      disabled={!isStepValid()}
+                      disabled={!validateStep(currentStep, userData)}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       Next
