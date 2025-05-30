@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Utensils, Heart, Target, Sparkles, ArrowRight, ArrowLeft } from "lucide-react";
+import { Utensils, Heart, Target, Sparkles, ArrowRight, ArrowLeft, LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface UserData {
   name: string;
@@ -32,27 +33,12 @@ interface UserData {
 }
 
 const Index = () => {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<string>('');
-  const [userData, setUserData] = useState<UserData>({
-    name: '',
-    age: '',
-    gender: '',
-    weight: '',
-    height: '',
-    activityLevel: '',
-    dietaryRestrictions: [],
-    healthGoals: '',
-    currentDiet: '',
-    mealsPerDay: '',
-    cookingTime: '',
-    budget: '',
-    medicalConditions: '',
-    foodPreferences: '',
-    additionalInfo: ''
-  });
-
+  
   const steps = [
     'Welcome',
     'Basic Info',
@@ -63,6 +49,22 @@ const Index = () => {
     'Additional Info',
     'Results'
   ];
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+      navigate('/auth');
+    } catch (error) {
+      toast.error("Error signing out");
+    }
+  };
 
   const handleInputChange = (field: keyof UserData, value: string | string[]) => {
     setUserData(prev => ({ ...prev, [field]: value }));
@@ -135,6 +137,17 @@ const Index = () => {
         return true;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-green-600">
+          <div className="w-6 h-6 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -494,6 +507,31 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      {/* Header with user info and sign out */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Utensils className="w-6 h-6 text-green-600" />
+            <span className="font-semibold text-gray-900">NutriAI</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <User className="w-4 h-4" />
+              <span>{user?.email}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         {currentStep > 0 && currentStep < 7 && (
           <div className="max-w-2xl mx-auto mb-8">
