@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserData, getEmptyUserData } from "@/types/userData";
+import { UserData } from "@/types/userData";
+import { getEmptyUserData } from "@/utils/formValidation";
 import { toast } from "sonner";
 
 export const useUserProfile = () => {

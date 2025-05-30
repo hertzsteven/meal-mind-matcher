@@ -16,3 +16,21 @@ export interface UserData {
   foodPreferences: string;
   additionalInfo: string;
 }
+
+export const getEmptyUserData = (): UserData => ({
+  name: '',
+  age: '',
+  gender: '',
+  weight: '',
+  height: '',
+  activityLevel: '',
+  dietaryRestrictions: [],
+  healthGoals: '',
+  currentDiet: '',
+  mealsPerDay: '',
+  cookingTime: '',
+  budget: '',
+  medicalConditions: '',
+  foodPreferences: '',
+  additionalInfo: ''
+});
