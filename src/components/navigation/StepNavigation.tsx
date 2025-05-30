@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Home } from "lucide-react";
 import { UserData } from "@/types/userData";
 import { validateStep } from "@/utils/formValidation";
 
@@ -13,6 +13,7 @@ interface StepNavigationProps {
   onPrevious: () => void;
   onNext: () => void;
   onGenerate: () => void;
+  onBackToDashboard?: () => void;
 }
 
 const StepNavigation: React.FC<StepNavigationProps> = ({
@@ -22,7 +23,8 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   isLoading,
   onPrevious,
   onNext,
-  onGenerate
+  onGenerate,
+  onBackToDashboard
 }) => {
   if (currentStep === 0 || currentStep >= totalSteps - 1) {
     return null;
@@ -32,14 +34,26 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
 
   return (
     <div className="flex justify-between items-center mt-8 pt-6 border-t">
-      <Button
-        variant="outline"
-        onClick={onPrevious}
-        disabled={currentStep === 0}
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Previous
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={onPrevious}
+          disabled={currentStep === 0}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Previous
+        </Button>
+        
+        {onBackToDashboard && (
+          <Button
+            variant="outline"
+            onClick={onBackToDashboard}
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
+      </div>
       
       {isLastStep ? (
         <Button
