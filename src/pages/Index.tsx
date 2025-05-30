@@ -205,10 +205,14 @@ const Index = () => {
       if (error) throw error;
 
       // Update profile to reference the new recommendation
-      await supabase
+      const { error: updateError } = await supabase
         .from('user_diet_profiles')
         .update({ current_recommendation_id: data.id })
         .eq('id', profileId);
+
+      if (updateError) {
+        console.error('Error updating profile with recommendation ID:', updateError);
+      }
 
       setCurrentRecommendationId(data.id);
       console.log('Recommendation saved successfully:', data);
@@ -266,7 +270,7 @@ const Index = () => {
 
       console.log('Received recommendation:', data.recommendation);
       
-      // Save the recommendation to database
+      // Save the recommendation to database and link it to the profile
       await saveRecommendation(data.recommendation, savedProfile.id);
       
       setRecommendation(data.recommendation);
