@@ -38,6 +38,23 @@ const Index = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [recommendation, setRecommendation] = useState<string>('');
+  const [userData, setUserData] = useState<UserData>({
+    name: '',
+    age: '',
+    gender: '',
+    weight: '',
+    height: '',
+    activityLevel: '',
+    dietaryRestrictions: [],
+    healthGoals: '',
+    currentDiet: '',
+    mealsPerDay: '',
+    cookingTime: '',
+    budget: '',
+    medicalConditions: '',
+    foodPreferences: '',
+    additionalInfo: ''
+  });
   
   const steps = [
     'Welcome',
