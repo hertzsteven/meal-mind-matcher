@@ -26,18 +26,16 @@ export const useSubscription = () => {
     recommendations_used: 0,
     last_reset_date: new Date().toISOString().split('T')[0],
   });
-  const [isLoading, setIsLoading] = useState(true); // Start as loading
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
-  const [usageLoading, setUsageLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasFetchedData, setHasFetchedData] = useState(false);
 
   const checkSubscription = async () => {
     if (!session?.access_token) {
-      setSubscriptionLoading(false);
+      setIsLoading(false);
       return;
     }
 
     try {
-      setSubscriptionLoading(true);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -54,19 +52,15 @@ export const useSubscription = () => {
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
-    } finally {
-      setSubscriptionLoading(false);
     }
   };
 
   const loadUsage = async () => {
     if (!user) {
-      setUsageLoading(false);
       return;
     }
 
     try {
-      setUsageLoading(true);
       console.log('📊 Loading usage for user:', user.id);
       const { data, error } = await supabase
         .from('user_usage')
@@ -129,17 +123,30 @@ export const useSubscription = () => {
       }
     } catch (error) {
       console.error('💥 Error in loadUsage:', error);
-    } finally {
-      setUsageLoading(false);
     }
   };
 
-  // Update overall loading state when both subscription and usage are done loading
-  useEffect(() => {
-    const overallLoading = subscriptionLoading || usageLoading;
-    setIsLoading(overallLoading);
-    console.log('🔄 Loading state updated:', { subscriptionLoading, usageLoading, overallLoading });
-  }, [subscriptionLoading, usageLoading]);
+  const loadAllData = async () => {
+    if (!user || !session || hasFetchedData) return;
+    
+    setIsLoading(true);
+    console.log('🔄 Loading all subscription and usage data...');
+    
+    try {
+      // Load both subscription and usage data in parallel
+      await Promise.all([
+        checkSubscription(),
+        loadUsage()
+      ]);
+      
+      setHasFetchedData(true);
+      console.log('✅ All data loaded successfully');
+    } catch (error) {
+      console.error('💥 Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const incrementUsage = async () => {
     if (!user) {
@@ -245,15 +252,23 @@ export const useSubscription = () => {
   };
 
   useEffect(() => {
-    if (user && session) {
-      checkSubscription();
-      loadUsage();
-    } else {
-      // Reset loading states when no user/session
-      setSubscriptionLoading(false);
-      setUsageLoading(false);
+    if (user && session && !hasFetchedData) {
+      loadAllData();
+    } else if (!user || !session) {
+      // Reset states when no user/session
+      setIsLoading(false);
+      setHasFetchedData(false);
+      setSubscriptionData({
+        subscribed: false,
+        subscription_tier: null,
+        subscription_end: null,
+      });
+      setUsageData({
+        recommendations_used: 0,
+        last_reset_date: new Date().toISOString().split('T')[0],
+      });
     }
-  }, [user, session]);
+  }, [user, session, hasFetchedData]);
 
   const canUseFeature = () => {
     const result = subscriptionData.subscribed || usageData.recommendations_used < 1;
@@ -272,7 +287,8 @@ export const useSubscription = () => {
     usageData,
     remainingRecommendations,
     canUseFeature: canUseFeature(),
-    isLoading
+    isLoading,
+    hasFetchedData
   });
 
   return {
