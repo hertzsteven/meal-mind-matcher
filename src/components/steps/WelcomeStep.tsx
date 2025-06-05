@@ -10,7 +10,11 @@ interface WelcomeStepProps {
 }
 
 const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
-  const { subscribed, remainingRecommendations } = useSubscription();
+  const { subscribed, remainingRecommendations, canUseFeature } = useSubscription();
+
+  console.log('WelcomeStep render:', { subscribed, remainingRecommendations, canUseFeature: canUseFeature() });
+
+  const canProceed = canUseFeature();
 
   return (
     <div className="text-center space-y-6">
@@ -74,14 +78,20 @@ const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
         onClick={onNext} 
         size="lg" 
         className="bg-green-600 hover:bg-green-700 text-white px-8"
-        disabled={!subscribed && remainingRecommendations === 0}
+        disabled={!canProceed}
       >
-        {!subscribed && remainingRecommendations === 0 
+        {!canProceed 
           ? "Upgrade to Continue" 
           : "Get Started"
         }
         <Sparkles className="w-5 h-5 ml-2" />
       </Button>
+      
+      {!canProceed && (
+        <p className="text-sm text-amber-600 mt-2">
+          You've used your free recommendation for today. Upgrade to Premium for unlimited access.
+        </p>
+      )}
     </div>
   );
 };

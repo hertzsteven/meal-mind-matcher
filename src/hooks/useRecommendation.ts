@@ -14,8 +14,12 @@ export const useRecommendation = () => {
   const generateRecommendation = async (userData: UserData, saveUserProfile: () => Promise<string | null>) => {
     console.log('Starting recommendation generation...');
     
-    // Check if user can use the feature
-    if (!canUseFeature()) {
+    // Check if user can use the feature BEFORE starting
+    const canUse = canUseFeature();
+    console.log('Can use feature:', canUse);
+    
+    if (!canUse) {
+      console.log('Usage limit exceeded, showing error');
       toast.error("You've reached your daily limit. Upgrade to Premium for unlimited recommendations!");
       throw new Error("Usage limit exceeded");
     }
@@ -52,9 +56,13 @@ export const useRecommendation = () => {
       setRecommendation(data.recommendation);
       setCurrentRecommendationId(data.recommendationId);
       
-      // Increment usage only for non-premium users
+      // Increment usage only for non-premium users AFTER successful generation
       if (!subscribed) {
-        await incrementUsage();
+        console.log('Incrementing usage for free user');
+        const success = await incrementUsage();
+        if (!success) {
+          console.warn('Failed to increment usage counter');
+        }
       }
       
       toast.success("Your personalized nutrition recommendation is ready!");
