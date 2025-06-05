@@ -64,10 +64,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <span className="font-medium">Gender:</span> {userData.gender || 'Not set'}
               </div>
               <div>
-                <span className="font-medium">Activity:</span> {userData.activity_level || 'Not set'}
+                <span className="font-medium">Activity:</span> {userData.activityLevel || 'Not set'}
               </div>
               <div>
-                <span className="font-medium">Goal:</span> {userData.health_goals || 'Not set'}
+                <span className="font-medium">Goal:</span> {userData.healthGoals || 'Not set'}
               </div>
             </div>
             
