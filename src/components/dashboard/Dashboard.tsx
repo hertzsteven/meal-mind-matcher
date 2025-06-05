@@ -7,6 +7,7 @@ import StatsWidget from "./StatsWidget";
 import EnhancedQuickActions from "./EnhancedQuickActions";
 import EnhancedRecommendationCard from "./EnhancedRecommendationCard";
 import RecommendationHistory from "../steps/RecommendationHistory";
+import HistoryDrawer from "./HistoryDrawer";
 
 interface DashboardProps {
   userData: UserData;
@@ -23,6 +24,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
   return (
     <div className="space-y-6 p-4">
@@ -48,6 +50,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             currentRecommendationId={currentRecommendationId}
             onTakeQuestionnaire={onTakeQuestionnaire}
             onToggleHistory={() => setShowHistory(!showHistory)}
+            onOpenHistoryDrawer={() => setShowHistoryDrawer(true)}
             showHistory={showHistory}
           />
         </div>
@@ -63,12 +66,19 @@ const Dashboard: React.FC<DashboardProps> = ({
         <EnhancedRecommendationCard recommendation={recommendation} />
       )}
 
-      {/* History section - only show when toggled */}
+      {/* History section - only show when toggled (compact view) */}
       {showHistory && currentRecommendationId && (
         <div className="animate-fade-in">
           <RecommendationHistory currentRecommendationId={currentRecommendationId} />
         </div>
       )}
+
+      {/* History drawer - full view */}
+      <HistoryDrawer
+        isOpen={showHistoryDrawer}
+        onClose={() => setShowHistoryDrawer(false)}
+        currentRecommendationId={currentRecommendationId}
+      />
     </div>
   );
 };

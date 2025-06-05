@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Sparkles, History, BookOpen, Settings, Trophy } from "lucide-react";
+import { Target, Sparkles, History, BookOpen, Settings, Trophy, LayoutGrid } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,7 @@ interface EnhancedQuickActionsProps {
   currentRecommendationId: string | null;
   onTakeQuestionnaire: () => void;
   onToggleHistory: () => void;
+  onOpenHistoryDrawer: () => void;
   showHistory: boolean;
 }
 
@@ -17,6 +18,7 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
   currentRecommendationId,
   onTakeQuestionnaire,
   onToggleHistory,
+  onOpenHistoryDrawer,
   showHistory
 }) => {
   const { canUseFeature } = useSubscription();
@@ -32,12 +34,20 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
       className: "bg-green-600 hover:bg-green-700"
     },
     {
-      label: showHistory ? 'Hide History' : 'View History',
+      label: showHistory ? 'Hide History' : 'Quick History',
       icon: History,
       onClick: onToggleHistory,
       disabled: !currentRecommendationId,
       variant: 'outline' as const,
       className: showHistory ? "bg-blue-50 border-blue-300 text-blue-700" : ""
+    },
+    {
+      label: 'Full History',
+      icon: LayoutGrid,
+      onClick: onOpenHistoryDrawer,
+      disabled: !currentRecommendationId,
+      variant: 'outline' as const,
+      className: "border-purple-300 text-purple-700 hover:bg-purple-50"
     },
     {
       label: 'Profile Settings',
