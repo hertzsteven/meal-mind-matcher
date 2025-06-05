@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,10 +155,16 @@ export const useSubscription = () => {
       }
 
       console.log('✅ Usage incremented successfully:', data);
-      setUsageData({
+      
+      // IMMEDIATELY update the local state to reflect the change
+      const updatedUsageData = {
         recommendations_used: data.recommendations_used,
         last_reset_date: data.last_reset_date,
-      });
+      };
+      setUsageData(updatedUsageData);
+      
+      console.log('🔄 Local state updated immediately:', updatedUsageData);
+      
       return true;
     } catch (error) {
       console.error('💥 Error in incrementUsage:', error);
@@ -253,7 +260,57 @@ export const useSubscription = () => {
     remainingRecommendations,
     checkSubscription,
     incrementUsage,
-    createCheckout,
-    openCustomerPortal,
+    createCheckout: async () => {
+      if (!session?.access_token) {
+        toast.error('Please log in to upgrade');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.url) {
+          window.open(data.url, '_blank');
+        }
+      } catch (error) {
+        console.error('Error creating checkout:', error);
+        toast.error('Failed to create checkout session');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    openCustomerPortal: async () => {
+      if (!session?.access_token) {
+        toast.error('Please log in to manage subscription');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.functions.invoke('customer-portal', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.url) {
+          window.open(data.url, '_blank');
+        }
+      } catch (error) {
+        console.error('Error opening customer portal:', error);
+        toast.error('Failed to open customer portal');
+      } finally {
+        setIsLoading(false);
+      }
+    },
   };
 };

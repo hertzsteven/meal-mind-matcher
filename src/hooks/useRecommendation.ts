@@ -68,8 +68,14 @@ export const useRecommendation = () => {
           console.warn('⚠️ Failed to increment usage counter');
         } else {
           console.log('🔄 Usage incremented successfully, refreshing subscription data...');
+          // Force a refresh of subscription data to ensure UI reflects the new usage
           await checkSubscription();
           console.log('✅ Subscription data refreshed');
+          
+          // Additional check to verify the state is updated
+          setTimeout(() => {
+            console.log('🔍 Final canUseFeature check after increment:', canUseFeature());
+          }, 100);
         }
       } else {
         console.log('👑 User is subscribed, skipping usage increment');
