@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { UserData } from "@/types/userData";
 import DashboardHeader from "./DashboardHeader";
-import ProfileSummaryCard from "./ProfileSummaryCard";
-import QuickActionsCard from "./QuickActionsCard";
-import RecommendationCard from "./RecommendationCard";
+import ProfileCompletionIndicator from "./ProfileCompletionIndicator";
+import StatsWidget from "./StatsWidget";
+import EnhancedQuickActions from "./EnhancedQuickActions";
+import EnhancedRecommendationCard from "./EnhancedRecommendationCard";
 
 interface DashboardProps {
   userData: UserData;
@@ -22,26 +23,41 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <DashboardHeader 
         userName={userData.name}
         showSubscriptionDetails={showSubscriptionDetails}
         onToggleSubscriptionDetails={() => setShowSubscriptionDetails(!showSubscriptionDetails)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProfileSummaryCard 
+      {/* Top row - Profile completion indicator */}
+      <div className="w-full">
+        <ProfileCompletionIndicator 
           userData={userData}
-          onTakeQuestionnaire={onTakeQuestionnaire}
-        />
-
-        <QuickActionsCard 
-          currentRecommendationId={currentRecommendationId}
           onTakeQuestionnaire={onTakeQuestionnaire}
         />
       </div>
 
-      <RecommendationCard recommendation={recommendation} />
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column - Quick Actions */}
+        <div className="lg:col-span-1">
+          <EnhancedQuickActions 
+            currentRecommendationId={currentRecommendationId}
+            onTakeQuestionnaire={onTakeQuestionnaire}
+          />
+        </div>
+
+        {/* Right column - Stats */}
+        <div className="lg:col-span-2">
+          <StatsWidget currentRecommendationId={currentRecommendationId} />
+        </div>
+      </div>
+
+      {/* Full width recommendation card */}
+      {recommendation && (
+        <EnhancedRecommendationCard recommendation={recommendation} />
+      )}
     </div>
   );
 };
