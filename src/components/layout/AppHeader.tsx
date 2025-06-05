@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Utensils, LogOut, User, FileText, Home, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AppHeaderProps {
   onTakeQuestionnaire?: () => void;
@@ -21,6 +21,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     try {
@@ -39,6 +40,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   const handleProfileClick = () => {
     navigate('/profile');
   };
+
+  const handleDashboardClick = () => {
+    navigate('/');
+  };
+
+  const isProfilePage = location.pathname === '/profile';
 
   return (
     <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
@@ -80,15 +87,27 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <span>{user?.email}</span>
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleProfileClick}
-            className="flex items-center gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            Profile
-          </Button>
+          {isProfilePage ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDashboardClick}
+              className="flex items-center gap-2"
+            >
+              <Home className="w-4 h-4" />
+              Dashboard
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleProfileClick}
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Profile
+            </Button>
+          )}
           
           <Button
             variant="outline"
