@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -24,10 +23,14 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   const handleSignOut = async () => {
     try {
+      console.log('🚪 Starting sign out process...');
       await signOut();
+      console.log('✅ Sign out successful');
       toast.success("Signed out successfully");
-      navigate('/auth');
+      // Force navigation to auth page
+      navigate('/auth', { replace: true });
     } catch (error) {
+      console.error('❌ Sign out error:', error);
       toast.error("Error signing out");
     }
   };

@@ -26,9 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔄 Setting up auth state listener...');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔔 Auth state change:', event, session?.user?.email || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -48,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🏁 Initial session:', session?.user?.email || 'no user');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -57,7 +61,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log('🚪 AuthContext: Starting sign out...');
+    try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ AuthContext: Sign out error:', error);
+        throw error;
+      }
+      console.log('✅ AuthContext: Sign out completed');
+    } catch (error) {
+      console.error('❌ AuthContext: Sign out failed:', error);
+      throw error;
+    }
   };
 
   const value = {
