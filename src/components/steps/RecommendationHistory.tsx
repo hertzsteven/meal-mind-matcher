@@ -56,13 +56,15 @@ const RecommendationHistory: React.FC<RecommendationHistoryProps> = ({
     
     setLoadingHistory(true);
     try {
+      console.log('Loading recommendation history for user:', user.id);
+      
       const { data, error } = await supabase
         .from('diet_recommendations')
         .select(`
           id,
           recommendation_text,
           generated_at,
-          user_diet_profiles!inner (
+          user_diet_profiles!diet_recommendations_profile_id_fkey (
             id,
             name,
             age,
@@ -85,7 +87,12 @@ const RecommendationHistory: React.FC<RecommendationHistoryProps> = ({
         .eq('user_id', user.id)
         .order('generated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Raw data from Supabase:', data);
 
       const formattedHistory = data.map(item => ({
         id: item.id,
@@ -94,6 +101,7 @@ const RecommendationHistory: React.FC<RecommendationHistoryProps> = ({
         profile: item.user_diet_profiles
       }));
 
+      console.log('Formatted history:', formattedHistory);
       setRecommendationHistory(formattedHistory);
     } catch (error) {
       console.error('Error loading recommendation history:', error);
