@@ -10,9 +10,35 @@ interface WelcomeStepProps {
 }
 
 const WelcomeStep: React.FC<WelcomeStepProps> = ({ onNext }) => {
-  const { subscribed, remainingRecommendations, canUseFeature } = useSubscription();
+  const { subscribed, remainingRecommendations, canUseFeature, isLoading } = useSubscription();
 
-  console.log('WelcomeStep render:', { subscribed, remainingRecommendations, canUseFeature: canUseFeature() });
+  console.log('WelcomeStep render:', { subscribed, remainingRecommendations, canUseFeature: canUseFeature(), isLoading });
+
+  // Show loading state while subscription data is being fetched
+  if (isLoading) {
+    return (
+      <div className="text-center space-y-6">
+        <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+          <Utensils className="w-10 h-10 text-green-600" />
+        </div>
+        
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Welcome to NutriAI
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Get personalized nutrition recommendations powered by AI. We'll analyze your lifestyle, 
+            health goals, and dietary preferences to create a perfect nutrition plan just for you.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
+          <span className="ml-2 text-green-600">Checking your subscription...</span>
+        </div>
+      </div>
+    );
+  }
 
   const canProceed = canUseFeature();
 

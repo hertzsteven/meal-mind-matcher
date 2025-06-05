@@ -26,13 +26,18 @@ export const useSubscription = () => {
     recommendations_used: 0,
     last_reset_date: new Date().toISOString().split('T')[0],
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start as loading
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [usageLoading, setUsageLoading] = useState(true);
 
   const checkSubscription = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setSubscriptionLoading(false);
+      return;
+    }
 
     try {
-      setIsLoading(true);
+      setSubscriptionLoading(true);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -50,14 +55,18 @@ export const useSubscription = () => {
     } catch (error) {
       console.error('Error checking subscription:', error);
     } finally {
-      setIsLoading(false);
+      setSubscriptionLoading(false);
     }
   };
 
   const loadUsage = async () => {
-    if (!user) return;
+    if (!user) {
+      setUsageLoading(false);
+      return;
+    }
 
     try {
+      setUsageLoading(true);
       console.log('📊 Loading usage for user:', user.id);
       const { data, error } = await supabase
         .from('user_usage')
@@ -120,8 +129,17 @@ export const useSubscription = () => {
       }
     } catch (error) {
       console.error('💥 Error in loadUsage:', error);
+    } finally {
+      setUsageLoading(false);
     }
   };
+
+  // Update overall loading state when both subscription and usage are done loading
+  useEffect(() => {
+    const overallLoading = subscriptionLoading || usageLoading;
+    setIsLoading(overallLoading);
+    console.log('🔄 Loading state updated:', { subscriptionLoading, usageLoading, overallLoading });
+  }, [subscriptionLoading, usageLoading]);
 
   const incrementUsage = async () => {
     if (!user) {
@@ -230,6 +248,10 @@ export const useSubscription = () => {
     if (user && session) {
       checkSubscription();
       loadUsage();
+    } else {
+      // Reset loading states when no user/session
+      setSubscriptionLoading(false);
+      setUsageLoading(false);
     }
   }, [user, session]);
 
@@ -249,7 +271,8 @@ export const useSubscription = () => {
     subscribed: subscriptionData.subscribed,
     usageData,
     remainingRecommendations,
-    canUseFeature: canUseFeature()
+    canUseFeature: canUseFeature(),
+    isLoading
   });
 
   return {
@@ -260,57 +283,7 @@ export const useSubscription = () => {
     remainingRecommendations,
     checkSubscription,
     incrementUsage,
-    createCheckout: async () => {
-      if (!session?.access_token) {
-        toast.error('Please log in to upgrade');
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (error) throw error;
-
-        if (data.url) {
-          window.open(data.url, '_blank');
-        }
-      } catch (error) {
-        console.error('Error creating checkout:', error);
-        toast.error('Failed to create checkout session');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    openCustomerPortal: async () => {
-      if (!session?.access_token) {
-        toast.error('Please log in to manage subscription');
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase.functions.invoke('customer-portal', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
-
-        if (error) throw error;
-
-        if (data.url) {
-          window.open(data.url, '_blank');
-        }
-      } catch (error) {
-        console.error('Error opening customer portal:', error);
-        toast.error('Failed to open customer portal');
-      } finally {
-        setIsLoading(false);
-      }
-    },
+    createCheckout,
+    openCustomerPortal,
   };
 };

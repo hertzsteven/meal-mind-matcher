@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendation } from "@/hooks/useRecommendation";
+import { useSubscription } from "@/hooks/useSubscription";
 import AppHeader from "@/components/layout/AppHeader";
 import StepProgress from "@/components/progress/StepProgress";
 import StepNavigation from "@/components/navigation/StepNavigation";
@@ -12,7 +14,8 @@ import { renderStep } from "@/utils/stepRenderer";
 import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isLoading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -48,10 +51,10 @@ const Index = () => {
   ];
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate]);
 
   // Load existing recommendation when user has a profile and not showing questionnaire
   useEffect(() => {
@@ -128,7 +131,8 @@ const Index = () => {
     setCurrentStep(0);
   };
 
-  if (loading) {
+  // Show loading spinner while auth or subscription data is loading
+  if (authLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">
         <div className="flex items-center gap-2 text-green-600">
