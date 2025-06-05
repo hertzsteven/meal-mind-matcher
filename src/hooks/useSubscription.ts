@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +57,7 @@ export const useSubscription = () => {
     if (!user) return;
 
     try {
+      console.log('📊 Loading usage for user:', user.id);
       const { data, error } = await supabase
         .from('user_usage')
         .select('recommendations_used, last_reset_date')
@@ -65,33 +65,41 @@ export const useSubscription = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
+        console.error('❌ Error loading usage:', error);
         throw error;
       }
 
       const today = new Date().toISOString().split('T')[0];
+      console.log('📅 Today is:', today);
       
       if (data) {
+        console.log('📊 Found existing usage data:', data);
         if (data.last_reset_date !== today) {
           // Reset usage for new day
-          console.log('Resetting usage for new day');
+          console.log('🔄 Resetting usage for new day');
           const { data: resetData, error: resetError } = await supabase
             .from('user_usage')
-            .upsert({
-              user_id: user.id,
+            .update({
               recommendations_used: 0,
               last_reset_date: today,
             })
+            .eq('user_id', user.id)
             .select()
             .single();
           
-          if (resetError) throw resetError;
+          if (resetError) {
+            console.error('❌ Error resetting usage:', resetError);
+            throw resetError;
+          }
+          console.log('✅ Usage reset successfully:', resetData);
           setUsageData({ recommendations_used: 0, last_reset_date: today });
         } else {
+          console.log('📊 Using existing usage data for today');
           setUsageData(data);
         }
       } else {
         // Create initial usage record
-        console.log('Creating initial usage record');
+        console.log('🆕 Creating initial usage record');
         const { data: newData, error: insertError } = await supabase
           .from('user_usage')
           .insert({
@@ -102,21 +110,33 @@ export const useSubscription = () => {
           .select()
           .single();
         
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('❌ Error creating usage record:', insertError);
+          throw insertError;
+        }
+        console.log('✅ Initial usage record created:', newData);
         setUsageData({ recommendations_used: 0, last_reset_date: today });
       }
     } catch (error) {
-      console.error('Error loading usage:', error);
+      console.error('💥 Error in loadUsage:', error);
     }
   };
 
   const incrementUsage = async () => {
-    if (!user) return false;
+    if (!user) {
+      console.error('❌ No user found for incrementUsage');
+      return false;
+    }
 
     try {
-      console.log('Incrementing usage from:', usageData.recommendations_used);
+      console.log('📈 Incrementing usage from:', usageData.recommendations_used);
+      console.log('👤 For user:', user.id);
+      
       const newUsage = usageData.recommendations_used + 1;
       const today = new Date().toISOString().split('T')[0];
+      
+      console.log('📊 New usage will be:', newUsage);
+      console.log('📅 Date:', today);
       
       const { data, error } = await supabase
         .from('user_usage')
@@ -128,16 +148,19 @@ export const useSubscription = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('💥 Error incrementing usage:', error);
+        throw error;
+      }
 
-      console.log('Usage incremented to:', data.recommendations_used);
+      console.log('✅ Usage incremented successfully:', data);
       setUsageData({
         recommendations_used: data.recommendations_used,
         last_reset_date: data.last_reset_date,
       });
       return true;
     } catch (error) {
-      console.error('Error incrementing usage:', error);
+      console.error('💥 Error in incrementUsage:', error);
       return false;
     }
   };
@@ -204,24 +227,18 @@ export const useSubscription = () => {
   }, [user, session]);
 
   const canUseFeature = () => {
-    console.log('Checking feature access:', {
+    const result = subscriptionData.subscribed || usageData.recommendations_used < 1;
+    console.log('🔍 canUseFeature check:', {
       subscribed: subscriptionData.subscribed,
       usageCount: usageData.recommendations_used,
-      canUse: subscriptionData.subscribed || usageData.recommendations_used < 1
+      canUse: result
     });
-    
-    // Premium users can always use features
-    if (subscriptionData.subscribed) {
-      return true;
-    }
-    
-    // Free users can use 1 recommendation per day
-    return usageData.recommendations_used < 1;
+    return result;
   };
 
   const remainingRecommendations = Math.max(0, 1 - usageData.recommendations_used);
 
-  console.log('Current subscription state:', {
+  console.log('📊 Current subscription state:', {
     subscribed: subscriptionData.subscribed,
     usageData,
     remainingRecommendations,
