@@ -6,6 +6,7 @@ import ProfileCompletionIndicator from "./ProfileCompletionIndicator";
 import StatsWidget from "./StatsWidget";
 import EnhancedQuickActions from "./EnhancedQuickActions";
 import EnhancedRecommendationCard from "./EnhancedRecommendationCard";
+import RecommendationHistory from "../steps/RecommendationHistory";
 
 interface DashboardProps {
   userData: UserData;
@@ -21,6 +22,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onTakeQuestionnaire
 }) => {
   const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   return (
     <div className="space-y-6 p-4">
@@ -45,6 +47,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           <EnhancedQuickActions 
             currentRecommendationId={currentRecommendationId}
             onTakeQuestionnaire={onTakeQuestionnaire}
+            onToggleHistory={() => setShowHistory(!showHistory)}
+            showHistory={showHistory}
           />
         </div>
 
@@ -57,6 +61,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Full width recommendation card */}
       {recommendation && (
         <EnhancedRecommendationCard recommendation={recommendation} />
+      )}
+
+      {/* History section - only show when toggled */}
+      {showHistory && currentRecommendationId && (
+        <div className="animate-fade-in">
+          <RecommendationHistory currentRecommendationId={currentRecommendationId} />
+        </div>
       )}
     </div>
   );

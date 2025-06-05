@@ -9,11 +9,15 @@ import { useNavigate } from "react-router-dom";
 interface EnhancedQuickActionsProps {
   currentRecommendationId: string | null;
   onTakeQuestionnaire: () => void;
+  onToggleHistory: () => void;
+  showHistory: boolean;
 }
 
 const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
   currentRecommendationId,
-  onTakeQuestionnaire
+  onTakeQuestionnaire,
+  onToggleHistory,
+  showHistory
 }) => {
   const { canUseFeature } = useSubscription();
   const navigate = useNavigate();
@@ -28,11 +32,12 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
       className: "bg-green-600 hover:bg-green-700"
     },
     {
-      label: 'View History',
+      label: showHistory ? 'Hide History' : 'View History',
       icon: History,
-      onClick: () => {}, // Placeholder for future implementation
+      onClick: onToggleHistory,
       disabled: !currentRecommendationId,
-      variant: 'outline' as const
+      variant: 'outline' as const,
+      className: showHistory ? "bg-blue-50 border-blue-300 text-blue-700" : ""
     },
     {
       label: 'Profile Settings',
