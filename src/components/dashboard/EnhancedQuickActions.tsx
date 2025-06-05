@@ -1,8 +1,9 @@
 
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Sparkles, History, BookOpen, Settings, Trophy, LayoutGrid, Zap, Crown } from "lucide-react";
+import { Target, Sparkles, History, Trophy, LayoutGrid, Zap, Crown } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -23,7 +24,6 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
   showHistory
 }) => {
   const { canUseFeature, subscribed } = useSubscription();
-  const navigate = useNavigate();
 
   const quickActions = [
     {
@@ -54,15 +54,6 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
       variant: 'outline' as const,
       className: "border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 hover:scale-105 transition-all duration-200",
       description: 'Browse all recommendations'
-    },
-    {
-      label: 'Profile Settings',
-      icon: Settings,
-      onClick: () => navigate('/profile'),
-      disabled: false,
-      variant: 'outline' as const,
-      className: "hover:bg-gray-50 hover:border-gray-300 hover:scale-105 transition-all duration-200",
-      description: 'Manage your preferences'
     },
     {
       label: 'Progress & Goals',
@@ -153,3 +144,4 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
 };
 
 export default EnhancedQuickActions;
+
