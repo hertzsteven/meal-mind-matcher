@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,10 @@ const EnhancedQuickActions: React.FC<EnhancedQuickActionsProps> = ({
     {
       label: 'Progress & Goals',
       icon: Trophy,
-      onClick: () => toast.info('Progress tracking coming soon!'),
+      onClick: () => toast({
+        title: "Coming Soon!",
+        description: "Progress tracking feature is in development"
+      }),
       disabled: true,
       variant: 'outline' as const,
       className: "opacity-50",
