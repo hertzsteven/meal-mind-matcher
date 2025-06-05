@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Plus, User, Target, ChevronDown, ChevronUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Plus, User, Target, ChevronDown, ChevronUp, Crown, Settings } from "lucide-react";
 import { UserData } from "@/types/userData";
 import { renderMarkdownContent } from "@/utils/markdownRenderer";
 import SubscriptionStatus from "@/components/subscription/SubscriptionStatus";
@@ -22,8 +23,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   currentRecommendationId,
   onTakeQuestionnaire
 }) => {
-  const { subscribed, canUseFeature } = useSubscription();
+  const { subscribed, canUseFeature, subscription_tier, openCustomerPortal } = useSubscription();
   const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
+  const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
 
   // Function to truncate recommendation text for preview
   const getRecommendationPreview = (text: string) => {
@@ -35,18 +37,48 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with compact subscription indicator */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back{userData.name ? `, ${userData.name}` : ''}!
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Welcome back{userData.name ? `, ${userData.name}` : ''}!
+          </h1>
+          {/* Compact subscription badge */}
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant={subscribed ? "default" : "outline"}
+              className={`cursor-pointer transition-colors ${
+                subscribed 
+                  ? "bg-green-100 text-green-800 border-green-200 hover:bg-green-200" 
+                  : "border-gray-300 text-gray-600 hover:bg-gray-50"
+              }`}
+              onClick={() => setShowSubscriptionDetails(!showSubscriptionDetails)}
+            >
+              <Crown className="w-3 h-3 mr-1" />
+              {subscribed ? `${subscription_tier} Plan` : 'Free Plan'}
+            </Badge>
+            {subscribed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={openCustomerPortal}
+                className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+              >
+                <Settings className="w-3 h-3 mr-1" />
+                Manage
+              </Button>
+            )}
+          </div>
+        </div>
         <p className="text-gray-600">Your personalized nutrition dashboard</p>
       </div>
 
-      {/* Subscription Status */}
-      <div className="max-w-md mx-auto">
-        <SubscriptionStatus />
-      </div>
+      {/* Expandable Subscription Details */}
+      {showSubscriptionDetails && (
+        <div className="max-w-md mx-auto">
+          <SubscriptionStatus />
+        </div>
+      )}
 
       {/* Upgrade Prompt for Non-Premium Users */}
       {!subscribed && !canUseFeature() && (
