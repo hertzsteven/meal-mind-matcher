@@ -91,42 +91,157 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer components {
-  /* Enhanced card styles */
+  /* Enhanced card styles with glass effect */
   .card {
-    @apply transition-all duration-200 hover:shadow-lg;
+    @apply transition-all duration-300 hover:shadow-xl;
+    backdrop-filter: blur(10px);
   }
   
-  /* Button hover effects */
+  /* Enhanced button hover effects */
   .btn-hover-lift {
-    @apply transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+  
+  /* Smooth gradient animations */
+  .gradient-shift {
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
   
   /* Progress bar animations */
   .progress-bar {
-    @apply transition-all duration-500 ease-out;
+    @apply transition-all duration-700 ease-out;
   }
   
-  /* Smooth animations for dashboard elements */
+  /* Enhanced animations for dashboard elements */
   .fade-in {
-    animation: fadeIn 0.5s ease-in;
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .scale-in {
+    animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+      opacity: 0; 
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0);
+    }
   }
   
-  /* Enhanced grid layouts */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Enhanced grid layouts with stagger animation */
   .dashboard-grid {
-    @apply grid gap-6 transition-all duration-300;
+    @apply grid gap-6;
   }
   
-  /* Improved focus states */
+  .dashboard-grid > * {
+    animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dashboard-grid > *:nth-child(1) { animation-delay: 0.1s; }
+  .dashboard-grid > *:nth-child(2) { animation-delay: 0.2s; }
+  .dashboard-grid > *:nth-child(3) { animation-delay: 0.3s; }
+  .dashboard-grid > *:nth-child(4) { animation-delay: 0.4s; }
+  
+  /* Improved focus states with smooth transitions */
   .focus-enhanced:focus {
     @apply ring-2 ring-green-500 ring-offset-2 outline-none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Interactive hover effects */
+  .interactive-hover {
+    @apply transition-all duration-200 hover:scale-105 hover:shadow-md;
+  }
+  
+  /* Pulse animation for important elements */
+  .pulse-gentle {
+    animation: pulseGentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulseGentle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #059669, #10b981, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Smooth underline animation */
+  .underline-animation {
+    position: relative;
+  }
+  
+  .underline-animation::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 50%;
+    background: linear-gradient(90deg, #059669, #10b981);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
+  
+  .underline-animation:hover::after {
+    width: 100%;
   }
 }
