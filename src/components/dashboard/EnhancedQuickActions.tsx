@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Target, Sparkles, History, BookOpen, Settings, Trophy, LayoutGrid, Zap, Crown } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface EnhancedQuickActionsProps {
   currentRecommendationId: string | null;
