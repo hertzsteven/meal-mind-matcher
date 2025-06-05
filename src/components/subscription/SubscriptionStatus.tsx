@@ -19,6 +19,26 @@ const SubscriptionStatus: React.FC = () => {
     remainingRecommendations
   } = useSubscription();
 
+  // Show loading state while subscription data is being fetched
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-gray-400" />
+            Loading...
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-center py-4">
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+            <span className="ml-2 text-gray-600">Checking subscription status...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!subscribed) {
     return (
       <Card>

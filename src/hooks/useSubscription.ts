@@ -16,17 +16,37 @@ interface UsageData {
 
 export const useSubscription = () => {
   const { user, session } = useAuth();
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
-    subscribed: false,
-    subscription_tier: null,
-    subscription_end: null,
-  });
+  // Start with undefined state to indicate we haven't loaded yet
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [usageData, setUsageData] = useState<UsageData>({
     recommendations_used: 0,
     last_reset_date: new Date().toISOString().split('T')[0],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [hasFetchedData, setHasFetchedData] = useState(false);
+
+  // Check local database first for existing subscription data
+  const checkLocalSubscription = async () => {
+    if (!user?.email) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('subscribers')
+        .select('subscribed, subscription_tier, subscription_end')
+        .eq('email', user.email)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking local subscription:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in checkLocalSubscription:', error);
+      return null;
+    }
+  };
 
   const checkSubscription = async () => {
     if (!session?.access_token) {
@@ -35,7 +55,6 @@ export const useSubscription = () => {
     }
 
     try {
-      setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -52,8 +71,12 @@ export const useSubscription = () => {
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
-    } finally {
-      setIsLoading(false);
+      // Set default free state on error
+      setSubscriptionData({
+        subscribed: false,
+        subscription_tier: null,
+        subscription_end: null,
+      });
     }
   };
 
@@ -135,6 +158,14 @@ export const useSubscription = () => {
     console.log('🔄 Loading all subscription and usage data...');
     
     try {
+      // First check local database for existing subscription data
+      const localSubscription = await checkLocalSubscription();
+      
+      if (localSubscription) {
+        console.log('📊 Found local subscription data:', localSubscription);
+        setSubscriptionData(localSubscription);
+      }
+      
       // Load both subscription and usage data in parallel
       await Promise.all([
         checkSubscription(),
@@ -145,6 +176,14 @@ export const useSubscription = () => {
       console.log('✅ All data loaded successfully');
     } catch (error) {
       console.error('💥 Error loading data:', error);
+      // Set default free state on error
+      if (!subscriptionData) {
+        setSubscriptionData({
+          subscribed: false,
+          subscription_tier: null,
+          subscription_end: null,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -253,6 +292,7 @@ export const useSubscription = () => {
     }
   };
 
+  // Single useEffect to handle user/session changes and data loading
   useEffect(() => {
     if (user && session && !hasFetchedData) {
       loadAllData();
@@ -260,11 +300,7 @@ export const useSubscription = () => {
       // Reset states when no user/session
       setIsLoading(false);
       setHasFetchedData(false);
-      setSubscriptionData({
-        subscribed: false,
-        subscription_tier: null,
-        subscription_end: null,
-      });
+      setSubscriptionData(null);
       setUsageData({
         recommendations_used: 0,
         last_reset_date: new Date().toISOString().split('T')[0],
@@ -272,16 +308,10 @@ export const useSubscription = () => {
     }
   }, [user, session, hasFetchedData]);
 
-  useEffect(() => {
-    if (user && session) {
-      checkSubscription();
-    }
-  }, [user, session]);
-
   const canUseFeature = () => {
-    const result = subscriptionData.subscribed || usageData.recommendations_used < 1;
+    const result = subscriptionData?.subscribed || usageData.recommendations_used < 1;
     console.log('🔍 canUseFeature check:', {
-      subscribed: subscriptionData.subscribed,
+      subscribed: subscriptionData?.subscribed,
       usageCount: usageData.recommendations_used,
       canUse: result
     });
@@ -291,7 +321,7 @@ export const useSubscription = () => {
   const remainingRecommendations = Math.max(0, 1 - usageData.recommendations_used);
 
   console.log('📊 Current subscription state:', {
-    subscribed: subscriptionData.subscribed,
+    subscribed: subscriptionData?.subscribed,
     usageData,
     remainingRecommendations,
     canUseFeature: canUseFeature(),
@@ -300,7 +330,7 @@ export const useSubscription = () => {
   });
 
   return {
-    ...subscriptionData,
+    ...(subscriptionData || { subscribed: false, subscription_tier: null, subscription_end: null }),
     usageData,
     isLoading,
     canUseFeature,
