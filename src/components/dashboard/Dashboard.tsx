@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Plus, User, Target, ChevronDown, ChevronUp, Crown, Settings } from "lucide-react";
+import { Sparkles, Plus, User, Target, ChevronDown, ChevronUp, Crown } from "lucide-react";
 import { UserData } from "@/types/userData";
 import { renderMarkdownContent } from "@/utils/markdownRenderer";
 import SubscriptionStatus from "@/components/subscription/SubscriptionStatus";
@@ -23,7 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   currentRecommendationId,
   onTakeQuestionnaire
 }) => {
-  const { subscribed, canUseFeature, subscription_tier, openCustomerPortal } = useSubscription();
+  const { subscribed, canUseFeature, subscription_tier } = useSubscription();
   const [isRecommendationExpanded, setIsRecommendationExpanded] = useState(false);
   const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
 
@@ -57,17 +57,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Crown className="w-3 h-3 mr-1" />
               {subscribed ? `${subscription_tier} Plan` : 'Free Plan'}
             </Badge>
-            {subscribed && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={openCustomerPortal}
-                className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
-              >
-                <Settings className="w-3 h-3 mr-1" />
-                Manage
-              </Button>
-            )}
           </div>
         </div>
         <p className="text-gray-600">Your personalized nutrition dashboard</p>
