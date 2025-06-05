@@ -35,6 +35,7 @@ export const useSubscription = () => {
     }
 
     try {
+      setIsLoading(true);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -51,6 +52,8 @@ export const useSubscription = () => {
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -268,6 +271,12 @@ export const useSubscription = () => {
       });
     }
   }, [user, session, hasFetchedData]);
+
+  useEffect(() => {
+    if (user && session) {
+      checkSubscription();
+    }
+  }, [user, session]);
 
   const canUseFeature = () => {
     const result = subscriptionData.subscribed || usageData.recommendations_used < 1;

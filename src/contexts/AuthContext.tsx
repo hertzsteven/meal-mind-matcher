@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,17 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Check subscription status after auth changes
-        if (session?.user && event === 'SIGNED_IN') {
-          setTimeout(() => {
-            supabase.functions.invoke('check-subscription', {
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            }).catch(console.error);
-          }, 0);
-        }
       }
     );
 
