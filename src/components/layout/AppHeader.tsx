@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Utensils, LogOut, User, FileText, Home } from "lucide-react";
+import { Utensils, LogOut, User, FileText, Home, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +34,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       console.error('❌ Sign out error:', error);
       toast.error("Error signing out");
     }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
   };
 
   return (
@@ -74,6 +79,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <User className="w-4 h-4" />
             <span>{user?.email}</span>
           </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleProfileClick}
+            className="flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Profile
+          </Button>
           
           <Button
             variant="outline"
