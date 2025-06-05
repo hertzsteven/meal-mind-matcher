@@ -116,14 +116,15 @@ export const useSubscription = () => {
     try {
       console.log('Incrementing usage from:', usageData.recommendations_used);
       const newUsage = usageData.recommendations_used + 1;
+      const today = new Date().toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('user_usage')
-        .upsert({
-          user_id: user.id,
+        .update({
           recommendations_used: newUsage,
-          last_reset_date: new Date().toISOString().split('T')[0],
+          last_reset_date: today,
         })
+        .eq('user_id', user.id)
         .select()
         .single();
 
