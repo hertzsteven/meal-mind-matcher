@@ -9,7 +9,7 @@ export const useRecommendation = () => {
   const [recommendation, setRecommendation] = useState('');
   const [currentRecommendationId, setCurrentRecommendationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { canUseFeature, incrementUsage, subscribed } = useSubscription();
+  const { canUseFeature, incrementUsage, subscribed, checkSubscription } = useSubscription();
 
   const generateRecommendation = async (userData: UserData, saveUserProfile: () => Promise<string | null>) => {
     console.log('Starting recommendation generation...');
@@ -56,12 +56,16 @@ export const useRecommendation = () => {
       setRecommendation(data.recommendation);
       setCurrentRecommendationId(data.recommendationId);
       
-      // Increment usage only for non-premium users AFTER successful generation
+      // Increment usage for non-premium users AFTER successful generation
       if (!subscribed) {
         console.log('Incrementing usage for free user');
         const success = await incrementUsage();
         if (!success) {
           console.warn('Failed to increment usage counter');
+        } else {
+          // Force refresh subscription data to update UI immediately
+          console.log('Refreshing subscription data after usage increment');
+          await checkSubscription();
         }
       }
       
